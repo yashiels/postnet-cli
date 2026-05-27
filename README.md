@@ -6,7 +6,7 @@
 
 <p align="center">
   Track PostNet parcels from the command line.<br/>
-  No browser. No auth. No scraping. Just fast results.
+  No browser. No auth. No API key. Just results.
 </p>
 
 <p align="center">
@@ -18,23 +18,11 @@
 
 ---
 
-## How it works
+## Why
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant CLI as postnet-cli
-    participant API as PostNet API
-    participant Providers as Courier Providers
+The [PostNet tracker page](https://www.postnet.co.za/tracker) works, but it means opening a browser, typing a tracking number, clicking a button, and waiting for a page to render — every single time.
 
-    User->>CLI: postnet track PPA148...
-    CLI->>API: GET /postnet-track/exit/?tracking_number=...&provider=aramex
-    API->>Providers: Query Aramex
-    Providers-->>API: Tracking events JSON
-    API-->>CLI: [ { date, time, location, description }, ... ]
-    CLI-->>User: 📦 Status table
-    Note over CLI,API: Falls back through DHL → CIT → Sprint → Coastal<br/>if the primary provider returns empty
-```
+`postnet-cli` hits the same backend API directly. One command, instant results. Pipe to `jq`, wire into a cron job, or call from your own code.
 
 ## Install
 
@@ -42,19 +30,19 @@ sequenceDiagram
 npm install -g postnet-cli
 ```
 
-Or run directly without installing:
+Or run without installing:
 
 ```sh
 npx postnet-cli track PPA14811107154
 ```
 
-## Usage
+## Quick Start
 
 ```sh
 # Track a parcel
 postnet track PPA14811107154
 
-# JSON output — great for scripting and cron jobs
+# JSON output — pipe to jq, feed to scripts, wire into cron
 postnet track PPA14811107154 --json
 
 # Force a specific courier provider
@@ -80,9 +68,56 @@ postnet track PPA14811107154 --all
   26 May 2026 10:17 AM  Gordons Bay, South Africa  Shipment Created
 ```
 
+## How It Works
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI as postnet-cli
+    participant API as PostNet API
+    participant P as Courier Provider
+
+    User->>CLI: postnet track PPA148...
+    CLI->>API: GET /postnet-track/exit/?tracking_number=...&provider=aramex
+    API->>P: Query courier backend
+    P-->>API: Tracking events
+    API-->>CLI: JSON array of events
+    CLI-->>User: 📦 Formatted status table
+
+    Note over CLI,API: Auto-falls back through<br/>DHL → CIT → Sprint → Coastal<br/>if the primary provider returns empty
+```
+
+Hits the same API endpoint as the PostNet tracker webpage. No scraping, no headless browser, no authentication. The entire client is two files using Node's built-in `https` module — zero dependencies.
+
+## Command Reference
+
+| Command | Description |
+|---------|-------------|
+| `postnet track <number>` | Track a parcel (auto-detects provider) |
+| `postnet track <number> --json` | Machine-readable JSON output |
+| `postnet track <number> --provider <name>` | Use a specific courier provider |
+| `postnet track <number> --all` | Query all providers and show results |
+| `postnet --help` | Show help |
+| `postnet --version` | Show version |
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `--json` | Output raw JSON array of tracking events |
+| `--provider <name>` | Skip auto-detection. Options: `aramex`, `dhl`, `cit`, `sprint`, `coastal` |
+| `--all` | Query every provider and display all results |
+
+### Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Tracking data found |
+| `1` | No data found, or request error |
+
 ## Providers
 
-PostNet routes parcels through multiple courier networks. The CLI auto-detects which one has your data.
+PostNet routes parcels through multiple courier networks. The CLI auto-detects which one carries your parcel.
 
 ```mermaid
 graph LR
@@ -100,48 +135,40 @@ graph LR
     style P fill:#ef4444,color:#fff,stroke:none
 ```
 
-Most domestic PostNet-to-PostNet parcels use **Aramex**, so it's tried first. If it returns empty, the CLI falls back through the remaining providers automatically.
+Most domestic PostNet-to-PostNet parcels use **Aramex**, so it's tried first. If it returns empty, the CLI falls back through the remaining providers automatically. Use `--provider` to skip auto-detection or `--all` to query everything.
 
 ## Programmatic API
 
 ```js
 const { track, trackAll } = require('postnet-cli');
 
-// Track with auto-detection
+// Track with auto-detection + fallback
 const result = await track('PPA14811107154');
 // → { provider: 'aramex', events: [{ date, time, location, description }, ...] }
 
-// Query all providers
+// Query all providers at once
 const all = await trackAll('PPA14811107154');
 // → { aramex: [...], dhl: [...], ... }
 
 // Specific provider + custom timeout
-const dhl = await track('PPA14811107154', { provider: 'dhl', timeoutMs: 10000 });
+const dhl = await track('PPA14811107154', {
+  provider: 'dhl',
+  timeoutMs: 10000
+});
 ```
 
-## CLI reference
+## Agent Integration
 
+All output modes work for both humans and AI agents:
+
+```sh
+# Structured JSON for agent consumption
+postnet track PPA14811107154 --json | jq '.[0].description'
+
+# Use in a cron job — notify on status change
+postnet track PPA14811107154 --json > /tmp/current.json
+diff /tmp/previous.json /tmp/current.json && echo "No change" || echo "Status updated!"
 ```
-postnet track <number>              Track a parcel (auto-detects provider)
-postnet track <number> --json       Machine-readable JSON output
-postnet track <number> --provider X Use a specific provider
-postnet track <number> --all        Query all providers
-postnet --help                      Show help
-postnet --version                   Show version
-```
-
-| Flag | Description |
-|------|-------------|
-| `--json` | Output raw JSON array of tracking events |
-| `--provider <name>` | Skip auto-detection, use: `aramex`, `dhl`, `cit`, `sprint`, `coastal` |
-| `--all` | Query every provider and show all results |
-
-### Exit codes
-
-| Code | Meaning |
-|------|---------|
-| `0` | Success — tracking data found |
-| `1` | No tracking data or error |
 
 ## Architecture
 
@@ -159,14 +186,26 @@ graph TD
     style API fill:#dc2626,color:#fff,stroke:none
 ```
 
-Zero dependencies. Uses Node's built-in `https` module. The entire package is two files:
+| File | Role |
+|------|------|
+| `lib/tracker.js` | API client with provider fallback logic. Importable for programmatic use. |
+| `bin/postnet.js` | CLI wrapper: argument parsing + human-readable table formatting. |
 
-- **`lib/tracker.js`** — API client with provider fallback logic. Importable for programmatic use.
-- **`bin/postnet.js`** — CLI wrapper with human-readable table formatting.
+## Roadmap
+
+- [x] Track parcels by tracking number
+- [x] Auto-detect courier provider with fallback
+- [x] JSON output for scripting
+- [x] Multi-provider query (`--all`)
+- [x] Programmatic Node.js API
+- [ ] `postnet watch <number>` — poll mode, exit on delivery
+- [ ] Delivery notifications (webhook / stdout event)
+- [ ] Multiple tracking numbers in one call
+- [ ] npm publish to registry
 
 ## Contributing
 
-Pull requests welcome. The project uses no build step — edit, test, ship.
+PRs welcome. No build step — edit, test, ship.
 
 ```sh
 git clone https://github.com/yashiels/postnet-cli.git
@@ -176,4 +215,4 @@ npm test
 
 ## License
 
-[MIT](LICENSE) — Yashiel Sookdeo
+[MIT](LICENSE)
