@@ -1,0 +1,40 @@
+{
+  "name": "postnet-cli",
+  "version": "1.0.0",
+  "description": "Track PostNet parcels from the command line",
+  "main": "index.js",
+  "bin": {
+    "postnet": "./bin/postnet.js"
+  },
+  "scripts": {
+    "lint": "node --check bin/postnet.js lib/tracker.js",
+    "test": "node test/track.test.js"
+  },
+  "keywords": [
+    "postnet",
+    "tracking",
+    "parcel",
+    "courier",
+    "south-africa",
+    "cli"
+  ],
+  "author": "Yashiel Sookdeo <yashiel@skyner.co.za>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yashiels/postnet-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yashiels/postnet-cli/issues"
+  },
+  "homepage": "https://github.com/yashiels/postnet-cli#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ]
+}
