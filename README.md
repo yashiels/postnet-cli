@@ -28,13 +28,15 @@ The [PostNet tracker page](https://www.postnet.co.za/tracker) works, but it mean
 ## Install
 
 ```sh
-npm install -g postnet-cli
-```
+git clone https://github.com/yashiels/postnet-cli.git
+cd postnet-cli
 
-Or run without installing:
+# Run directly
+node bin/postnet.js track PPA14811107154
 
-```sh
-npx postnet-cli track PPA14811107154
+# Or link globally
+npm link
+postnet track PPA14811107154
 ```
 
 ## Quick Start
@@ -202,7 +204,7 @@ graph TD
 - [ ] `postnet watch <number>` — poll mode, exit on delivery
 - [ ] Delivery notifications (webhook / stdout event)
 - [ ] Multiple tracking numbers in one call
-- [ ] npm publish to registry
+- [ ] Publish to npm (`npm install -g postnet-cli`)
 
 ## Contributing
 
