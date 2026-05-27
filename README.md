@@ -11,7 +11,6 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/postnet-cli"><img src="https://img.shields.io/npm/v/postnet-cli?color=cb3837&label=npm" alt="npm version" /></a>
   <a href="https://github.com/yashiels/postnet-cli/blob/main/LICENSE"><img src="https://img.shields.io/github/license/yashiels/postnet-cli?color=blue" alt="license" /></a>
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen" alt="zero dependencies" />
   <img src="https://img.shields.io/badge/node-%3E%3D18-339933?logo=node.js&logoColor=white" alt="node >= 18" />
@@ -34,12 +33,16 @@ cd postnet-cli
 # Run directly
 node bin/postnet.js track PPA14811107154
 
-# Or link globally
+# Or link globally so 'postnet' works anywhere
 npm link
 postnet track PPA14811107154
 ```
 
+> **Note:** Not yet published to npm. For now, clone and `npm link` to get the global `postnet` command.
+
 ## Quick Start
+
+After installing with `npm link`:
 
 ```sh
 # Track a parcel
@@ -143,7 +146,7 @@ Most domestic PostNet-to-PostNet parcels use **Aramex**, so it's tried first. If
 ## Programmatic API
 
 ```js
-const { track, trackAll } = require('postnet-cli');
+const { track, trackAll } = require('./lib/tracker');
 
 // Track with auto-detection + fallback
 const result = await track('PPA14811107154');
@@ -168,9 +171,8 @@ All output modes work for both humans and AI agents:
 # Structured JSON for agent consumption
 postnet track PPA14811107154 --json | jq '.[0].description'
 
-# Use in a cron job — notify on status change
-postnet track PPA14811107154 --json > /tmp/current.json
-diff /tmp/previous.json /tmp/current.json && echo "No change" || echo "Status updated!"
+# Use in a cron job — check for status changes
+postnet track PPA14811107154 --json > /tmp/postnet-latest.json
 ```
 
 ## Architecture
@@ -215,6 +217,10 @@ git clone https://github.com/yashiels/postnet-cli.git
 cd postnet-cli
 npm test
 ```
+
+## Disclaimer
+
+This project is not affiliated with, endorsed by, or sponsored by PostNet Southern Africa. PostNet is a registered trademark of PostNet Southern Africa (Pty) Ltd. This tool uses publicly accessible endpoints from the PostNet website for parcel tracking.
 
 ## License
 
