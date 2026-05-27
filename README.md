@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/postnet-logo.svg" alt="PostNet" width="280" />
+  <img src="assets/postnet-logo.png" alt="PostNet" width="280" />
 </p>
 
 <h1 align="center">postnet-cli</h1>
