@@ -6,7 +6,8 @@
 
 <p align="center">
   Track PostNet parcels from the command line.<br/>
-  No browser. No auth. No API key. Just results.
+  No browser. No auth. No API key. Just results.<br/><br/>
+  Built by <a href="https://github.com/yashiels">@yashiels</a>
 </p>
 
 <p align="center">
@@ -215,4 +216,4 @@ npm test
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) — Yashiel Sookdeo
