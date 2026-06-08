@@ -1,6 +1,6 @@
 {
   "name": "postnet-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Track PostNet parcels from the command line",
   "main": "lib/tracker.js",
   "bin": {
