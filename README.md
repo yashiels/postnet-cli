@@ -1,18 +1,18 @@
-# postnet — track your parcel in one command
+# 📦 postnet
 
-Track PostNet parcels from the command line. Hits the PostNet tracker API directly — no browser, no auth, no API key.
+**Track PostNet parcels in one command.**
 
-- **Zero dependencies** — pure Node.js standard library, no npm packages at runtime
-- **Auto-fallback** — tries Aramex first, falls back through DHL → CIT → Sprint → Coastal automatically
-- **Scriptable** — `--json` for machine-readable output; `--all` to query every provider at once
+Hits the PostNet tracker API directly — no browser, no auth, no API key. Zero dependencies.
+
+![postnet CLI demo](docs/assets/screenshot.png)
 
 ## Install
 
 ```bash
-brew install yashiels/tap/postnet  # auto-taps yashiels/tap
+brew install yashiels/tap/postnet
 ```
 
-Direct downloads from the [latest GitHub release](https://github.com/yashiels/postnet-cli/releases/latest).
+Or download a standalone binary from the [latest GitHub release](https://github.com/yashiels/postnet-cli/releases/latest) (macOS arm64, Linux x64).
 
 Build from source:
 
@@ -26,33 +26,29 @@ npm install
 
 ```bash
 postnet track PPA14811107154
-postnet track PPA14811107154 --json
-postnet track PPA14811107154 --provider dhl
-postnet track PPA14811107154 --all
 ```
 
-Example output:
-
 ```
-Status: Ready For Collection
-Rondebosch, South Africa — 27 May 2026 09:59 AM
+  📦 Status: Ready For Collection
+  📍 Rondebosch, South Africa — 27 May 2026 09:59 AM
 
-Date                  Location                   Description
-27 May 2026 09:59 AM  Rondebosch, South Africa   Ready For Collection
-27 May 2026 09:18 AM  Cape Town                  Delivered
-27 May 2026 07:17 AM  Cape Town                  Out For Delivery
+  Date                  Location                   Description
+  ─────────────────────  ─────────────────────────  ────────────────────────────────────────
+  27 May 2026 09:59 AM  Rondebosch, South Africa   Ready For Collection
+  27 May 2026 09:18 AM  Cape Town                  Delivered
+  27 May 2026 07:17 AM  Cape Town                  Out For Delivery
 ```
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `postnet track <number>` | Track a parcel (auto-detects provider) |
-| `postnet track <number> --json` | Machine-readable JSON output |
-| `postnet track <number> --provider <name>` | Use a specific courier provider |
-| `postnet track <number> --all` | Query all providers and show results |
-| `postnet --help` | Show help |
-| `postnet --version` | Show version |
+```bash
+postnet track <number>                    # track a parcel (auto-detects provider)
+postnet track <number> --json             # machine-readable JSON output
+postnet track <number> --provider <name>  # target a specific provider
+postnet track <number> --all              # query all providers at once
+postnet --version
+postnet --help
+```
 
 | Flag | Description |
 |------|-------------|
@@ -61,22 +57,28 @@ Date                  Location                   Description
 | `--all` | Query every provider and display all results |
 
 Providers: `aramex` (default), `dhl`, `cit`, `sprint`, `coastal`
-Exit codes: `0` data found, `1` no data / request error
+
+Exit codes: `0` data found, `1` no data or request error.
+
+## How It Works
+
+PostNet's website exposes a lightweight JSON endpoint used by its own tracker page. `postnet` calls that endpoint directly with the same headers a browser would send. There's no account, no API key, and no scraping involved.
+
+By default the tool tries **Aramex** first (handles most PostNet parcels), then falls back through DHL → CIT → Sprint → Coastal until it finds events or exhausts all providers. Pass `--provider` to skip straight to a specific courier. Pass `--all` to fan out to every provider in parallel and see everything at once.
+
+## Development
+
+```bash
+npm run lint   # syntax check (node --check)
+npm test       # unit + live API tests
+```
+
+Releases are automated. Go to **Actions → Ship**, pick `patch`, `minor`, or `major` — it bumps the version, builds standalone binaries with Bun, publishes a GitHub release, and updates the [Homebrew tap](https://github.com/yashiels/homebrew-tap).
 
 ## Disclaimer
 
 Not affiliated with PostNet Southern Africa. Uses publicly accessible endpoints from the PostNet website.
 
-## Development
-
-```bash
-npm install     # install dependencies
-npm run lint    # syntax check
-npm test        # run tests
-```
-
-Releases are automated via GitHub Actions. Go to **Actions → Ship**, pick `patch`, `minor`, or `major` — it bumps the version, builds a standalone binary, publishes a GitHub release, and updates the [Homebrew tap](https://github.com/yashiels/homebrew-tap).
-
 ## License
 
-MIT — Yashiel Sookdeo
+MIT — [Yashiel Sookdeo](https://github.com/yashiels)
