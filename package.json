@@ -8,7 +8,8 @@
   },
   "scripts": {
     "lint": "node --check bin/postnet.js lib/tracker.js",
-    "test": "node test/track.test.js"
+    "test": "node test/track.test.js",
+    "fmt": "npx prettier --write ."
   },
   "keywords": [
     "postnet",
@@ -36,5 +37,8 @@
     "lib/",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "devDependencies": {
+    "prettier": "^3.8.4"
+  }
 }
