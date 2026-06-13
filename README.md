@@ -4,7 +4,7 @@
 
 Hits the PostNet tracker API directly — no browser, no auth, no API key. Zero dependencies.
 
-![postnet CLI demo](docs/assets/screenshot.png)
+![postnet logo](assets/postnet-logo.png)
 
 ## Install
 
