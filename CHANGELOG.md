@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AGENTS.md for agentic development context
 - Makefile with standard `install`, `fmt`, `lint`, `test`, `ci`, and `clean` targets
 - Prettier dev dependency and `.prettierrc` config (`singleQuote`, `trailingComma: all`, `printWidth: 100`)
+- Granular exit codes for headless/agent use: `0` found · `1` valid no-data · `2` usage error · `3` upstream/network failure (previously `0`/`1` only)
+- Provider validation — an unknown `--provider` name is now a usage error instead of a silent empty result; `--provider` + `--all` and unknown flags are rejected
+- Same-host HTTP redirect following (max 3 hops; cross-host redirects refused so the tracking number is never leaked to another host)
+- Deterministic mocked-transport and CLI exit-code tests; the live API test is now opt-in via `POSTNET_LIVE=1`
+
+### Changed
+- Provider fallback and `--all` now issue requests **concurrently** instead of sequentially — worst-case latency ~15s rather than ~75s
+- JSON mode always writes valid JSON to stdout (`null` / `{}` when not found); human-readable errors go to stderr, so `| jq` pipelines never break
+- Operational failures (non-2xx status, non-JSON body, timeout, connection error) are now surfaced as exit `3` instead of being silently indistinguishable from "not found"
+- Per-request timeout is now a hard overall deadline, not just an inactivity timeout
+
+### Fixed
+- `--all --json` no longer exits `0` when nothing is found (now exits `1`)
+- `track <n> --json` on no-data no longer prints a plain-text line to stdout (now prints `null`)
+- Response body decoded with `setEncoding('utf8')` to avoid corrupting UTF-8 split across chunks; upstream event payloads are shape-validated; response size is capped
 
 ## [1.0.0] — 2026-06-08
 

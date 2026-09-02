@@ -58,13 +58,13 @@ postnet --help
 
 Providers: `aramex` (default), `dhl`, `cit`, `sprint`, `coastal`
 
-Exit codes: `0` data found, `1` no data or request error.
+Exit codes: `0` data found · `1` no data (valid empty result) · `2` usage error (bad arguments) · `3` upstream / network failure. JSON mode always writes valid JSON to stdout — `null` (single) or `{}` (`--all`) when nothing is found — so a pipe into `jq` never breaks; use the exit code to tell "not found" (`1`) from "lookup failed" (`3`).
 
 ## How It Works
 
 PostNet's website exposes a lightweight JSON endpoint used by its own tracker page. `postnet` calls that endpoint directly with the same headers a browser would send. There's no account, no API key, and no scraping involved.
 
-By default the tool tries **Aramex** first (handles most PostNet parcels), then falls back through DHL → CIT → Sprint → Coastal until it finds events or exhausts all providers. Pass `--provider` to skip straight to a specific courier. Pass `--all` to fan out to every provider in parallel and see everything at once.
+By default the tool tries **Aramex** first (handles most PostNet parcels); if that returns nothing it queries the remaining couriers (DHL, CIT, Sprint, Coastal) concurrently and returns the first with events. Pass `--provider` to skip straight to a specific courier (no fallback). Pass `--all` to fan out to every provider in parallel and see everything at once. Every request has a hard 15s deadline and follows same-host redirects only.
 
 ## Development
 
