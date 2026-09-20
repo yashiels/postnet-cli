@@ -28,6 +28,10 @@ npm link   # puts `postnet` on your PATH
 
 **No login required.** PostNet's tracker endpoint is public — there is no account, API key, config file, or environment variable to set. Nothing is cached or written to disk. Every command works out of the box, headless included.
 
+**Upstream session token (since v1.0.4).** The endpoint requires a per-request session: `/postnet-track/exit/` takes a `t` param scraped from `<input id="track-token">` on `https://www.postnet.co.za/tracker`, bound to the `PHPSESSID` cookie that page sets. Both are required — token alone or cookie alone returns a bare Apache 403. The CLI fetches this internally, once per invocation and reused across providers, so there is still nothing for the user to configure.
+
+If every provider starts returning 403 again, check whether PostNet changed the token mechanism before suspecting bot detection: a browser User-Agent makes no difference and the 403 is a plain Apache page, not a WAF challenge. Reproduce with curl — fetch `/tracker` with a cookie jar, scrape the 32-hex token, then call the endpoint with `&t=<token>` and the same jar.
+
 ## Commands
 
 Single command — `track`:
