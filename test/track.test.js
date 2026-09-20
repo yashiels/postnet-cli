@@ -72,7 +72,13 @@ function installMock(handler) {
       },
     };
     process.nextTick(() => {
-      const outcome = handler(url) || {};
+      const outcome =
+        new URL(url).pathname === '/tracker'
+          ? {
+              headers: { 'set-cookie': ['PHPSESSID=test-session; Path=/'] },
+              body: '<input id="track-token" type="hidden" value="0123456789abcdef0123456789abcdef">',
+            }
+          : handler(url, options) || {};
       if (outcome.networkError) {
         (reqListeners.error || []).forEach((f) => f(new Error(outcome.networkError)));
         (reqListeners.close || []).forEach((f) => f());
@@ -151,6 +157,19 @@ async function argParsing() {
 
 async function transport() {
   console.log('\n  Transport (fetchProvider):');
+  let authenticatedRequest;
+  installMock((url, options) => {
+    authenticatedRequest = { url, options };
+    return { status: 200, body: foundBody };
+  });
+  await fetchProvider('X', 'aramex');
+  assert(
+    new URL(authenticatedRequest.url).searchParams.get('t') ===
+      '0123456789abcdef0123456789abcdef' &&
+      authenticatedRequest.options.headers.Cookie === 'PHPSESSID=test-session',
+    'provider request sends session token and cookie',
+  );
+
   installMock(() => ({ status: 200, body: foundBody }));
   assert((await fetchProvider('X', 'aramex'))?.length === 1, '200 + JSON array → events');
 
@@ -228,6 +247,16 @@ async function trackLogic() {
   const all = await trackAll('X');
   assert(all.found.dhl?.length === 1, 'trackAll collects found provider');
   assert(all.errors.length === 4, 'trackAll reports per-provider errors');
+
+  let sessionRequests = 0;
+  installMock(() => ({ body: '' }));
+  const mockedGet = https.get;
+  https.get = (url, options, cb) => {
+    if (new URL(url).pathname === '/tracker') sessionRequests++;
+    return mockedGet(url, options, cb);
+  };
+  await trackAll('X');
+  assert(sessionRequests === 1, 'trackAll fetches one session for every provider');
 
   restoreMock();
 }
